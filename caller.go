@@ -45,6 +45,8 @@ func startCall(price string) {
 
 	apiKey := os.Getenv("TELNYX_API_KEY")
 
+	fmt.Println("API KEY: ", apiKey)
+
 	url := "https://api.telnyx.com/v2/calls"
 
 	callReq := CallRequest{
@@ -117,7 +119,7 @@ func startCall(price string) {
 			}
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 
 		startTalking(response.Data.CallControlID, apiKey, price)
 	}
