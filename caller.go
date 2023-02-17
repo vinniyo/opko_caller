@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/piquette/finance-go/quote"
@@ -24,8 +25,15 @@ func main() {
 
 	// Success!
 	for {
-		startCall(fmt.Sprintf("%.2f", q.Bid))
-		time.Sleep(5 * time.Second)
+		people := []string{"rubin", "frost", "logal", "bishop", "nabel", "hsiao"}
+
+		for _, person := range people {
+			fmt.Println("Calling: ", person)
+			startCall(fmt.Sprintf("%.2f", q.Bid), convertDigits(person))
+			time.Sleep(120 * time.Second)
+		}
+
+		time.Sleep(5 * time.Minute)
 	}
 }
 
@@ -41,7 +49,7 @@ type CallRequest struct {
 	From         string `json:"from"`
 }
 
-func startCall(price string) {
+func startCall(price string, personDigits string) {
 
 	apiKey := os.Getenv("TELNYX_API_KEY")
 
@@ -121,8 +129,87 @@ func startCall(price string) {
 
 		time.Sleep(10 * time.Second)
 
+		startAudioRecording(response.Data.CallControlID)
+
+		//dial one
+		dialDigits(response.Data.CallControlID, "1", apiKey)
+		time.Sleep(5 * time.Second)
+		dialDigits(response.Data.CallControlID, personDigits+"#", apiKey)
+		time.Sleep(3 * time.Second)
+		dialDigits(response.Data.CallControlID, "#", apiKey)
+		time.Sleep(10 * time.Second)
+
+		//dialExtension(response.Data.CallControlID, apiKey, price)
+
 		startTalking(response.Data.CallControlID, apiKey, price)
 	}
+}
+
+type AudioPost struct {
+	Channels string `json:"channels"`
+	Format   string `json:"format"`
+}
+
+func startAudioRecording(callControlID string) bool {
+	BaseUrl := "https://api.telnyx.com/v2/calls/" + callControlID + "/actions/record_start"
+
+	telnyxPost := AudioPost{"dual", "mp3"}
+	telnyxPostJson, _ := json.Marshal(telnyxPost)
+
+	req, err := http.NewRequest("POST", BaseUrl, bytes.NewBuffer([]byte(telnyxPostJson)))
+	if err != nil {
+		fmt.Println("error posting digits", err)
+		return false
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println("here is the error in startRecording", err)
+		return false
+	}
+
+	defer resp.Body.Close()
+
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	log.Println("Response from Audio Recording: ", string(bodyBytes))
+
+	return true
+
+}
+
+func convertDigits(name string) string {
+
+	mapping := map[rune]rune{
+		'A': '2', 'B': '2', 'C': '2',
+		'D': '3', 'E': '3', 'F': '3',
+		'G': '4', 'H': '4', 'I': '4',
+		'J': '5', 'K': '5', 'L': '5',
+		'M': '6', 'N': '6', 'O': '6',
+		'P': '7', 'Q': '7', 'R': '7', 'S': '7',
+		'T': '8', 'U': '8', 'V': '8',
+		'W': '9', 'X': '9', 'Y': '9', 'Z': '9',
+	}
+
+	// Convert the string to the corresponding digits
+	output := make([]rune, 0, len(name))
+	for _, char := range strings.ToUpper(name) {
+		if digit, ok := mapping[char]; ok {
+			output = append(output, digit)
+		} else {
+			output = append(output, char)
+		}
+	}
+
+	// Print the result
+	fmt.Println("Digits:", string(output))
+	return string(output)
 }
 
 type StartCallResponse struct {
@@ -179,7 +266,7 @@ func startTalking(id, key, price string) {
 
 	// Define the request body for sending audio from text during a call
 	speakReq := SpeakRequest{
-		Payload:  "Hello, this is a message from a shareholder. You're current stock price is now " + price,
+		Payload:  "Hello, this is a message from a concerned shareholder. You're current stock price is now " + price + " Thank you",
 		Voice:    "female",
 		Language: "en-US",
 	}
