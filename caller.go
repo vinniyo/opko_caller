@@ -59,7 +59,7 @@ func startCall(price string, personDigits string) {
 
 	callReq := CallRequest{
 		ConnectionID: "1720750306398045239",
-		To:           "+13105316926", // The phone number to call
+		To:           "+13055754100", // The phone number to call
 		From:         "+14422018839", // Your Telnyx phone number
 
 	}
@@ -129,13 +129,13 @@ func startCall(price string, personDigits string) {
 
 		time.Sleep(10 * time.Second)
 
-		startAudioRecording(response.Data.CallControlID)
+		startAudioRecording(response.Data.CallControlID, apiKey)
 
 		//dial one
 		dialDigits(response.Data.CallControlID, "1", apiKey)
 		time.Sleep(5 * time.Second)
 		dialDigits(response.Data.CallControlID, personDigits+"#", apiKey)
-		time.Sleep(3 * time.Second)
+		time.Sleep(5 * time.Second)
 		dialDigits(response.Data.CallControlID, "#", apiKey)
 		time.Sleep(10 * time.Second)
 
@@ -150,7 +150,7 @@ type AudioPost struct {
 	Format   string `json:"format"`
 }
 
-func startAudioRecording(callControlID string) bool {
+func startAudioRecording(callControlID, apiKey string) bool {
 	BaseUrl := "https://api.telnyx.com/v2/calls/" + callControlID + "/actions/record_start"
 
 	telnyxPost := AudioPost{"dual", "mp3"}
@@ -266,7 +266,7 @@ func startTalking(id, key, price string) {
 
 	// Define the request body for sending audio from text during a call
 	speakReq := SpeakRequest{
-		Payload:  "Hello, this is a message from a concerned shareholder. You're current stock price is now " + price + " Thank you",
+		Payload:  "Hello, this is a message from a concerned shareholder. You're current stock price is now " + price + " . Thank you",
 		Voice:    "female",
 		Language: "en-US",
 	}
