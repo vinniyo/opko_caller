@@ -25,7 +25,7 @@ func main() {
 
 	// Success!
 	for {
-		people := []string{"rubin", "frost", "logal", "bishop", "nabel", "hsiao"}
+		people := []string{"rubin", "frost", "logal", "bishop", "nabel", "hsiao", "burke", "gutman"}
 
 		for _, person := range people {
 			fmt.Println("Calling: ", person)
@@ -137,7 +137,7 @@ func startCall(price string, personDigits string) {
 		dialDigits(response.Data.CallControlID, personDigits+"#", apiKey)
 		time.Sleep(5 * time.Second)
 		dialDigits(response.Data.CallControlID, "#", apiKey)
-		time.Sleep(10 * time.Second)
+		time.Sleep(15 * time.Second)
 
 		//dialExtension(response.Data.CallControlID, apiKey, price)
 
